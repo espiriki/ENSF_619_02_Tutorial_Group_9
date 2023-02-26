@@ -66,7 +66,7 @@ def get_dataset(args):
                 # Chose uneuqal splits for every user
                 user_groups = mnist_noniid_unequal(train_dataset, args.num_users)
             else:
-                # Chose euqal splits for every user
+                # Chose equal splits for every user
                 user_groups = mnist_noniid(train_dataset, args.num_users)
 
     return train_dataset, test_dataset, user_groups
@@ -89,7 +89,7 @@ def exp_details(args):
     print(f'    Model     : {args.model}')
     print(f'    Optimizer : {args.optimizer}')
     print(f'    Learning  : {args.lr}')
-    print(f'    Global Rounds   : {args.epochs}\n')
+    print(f'    Global Rounds   : {args.global_epochs}\n')
 
     print('    Federated parameters:')
     if args.iid:
