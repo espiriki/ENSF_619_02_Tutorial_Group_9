@@ -84,7 +84,7 @@ def average_weights(w):
     return w_avg
 
 
-def exp_details(args):
+def experiment_details(args):
     print('\nExperimental details:')
     print(f'    Model     : {args.model}')
     print(f'    Optimizer : {args.optimizer}')
