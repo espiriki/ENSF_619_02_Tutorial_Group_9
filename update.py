@@ -2,10 +2,34 @@
 # -*- coding: utf-8 -*-
 # Python version: 3.6
 
+#### TUTORIAL FOR ENSF 619.3 ---- Group 9###
+
+## This is the algorithm of FedAvg!!
+
+###---------------------------------------------------###
+## Summary of FedAvg:
+
+### In FedAvg, each client uses it own dataset to obtain the gradient updates
+### The main server receives these updates from all the clients and then perform averaging of the gradient updates
+### The averaged gradients update is then sent back to each client and their weights are updated.
+
+
+
+
+
+
+### import python libraries
+### this code use pytorch to implement the algo
+
+
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 
+
+
+### This is class definitiion of pytorch dataset.
+### Pytorch allows us to define custom dataset inheriting from Dataset class
 
 class DatasetSplit(Dataset):
     """An abstract Dataset class wrapped around Pytorch Dataset class.
@@ -23,14 +47,24 @@ class DatasetSplit(Dataset):
         return torch.tensor(image), torch.tensor(label)
 
 
+    
+
+ ### class for updating local clients
 class LocalUpdate(object):
     def __init__(self, args, dataset, idxs, device_id):
         self.args = args
+        ## split the dataset in to train, validatation and test
         self.trainloader, self.validloader, self.testloader = self.train_val_test(
             dataset, list(idxs))
+        
+        ## set the device to cuda if gpu is available
         self.device = 'cuda' if args.gpu else 'cpu'
         # Default criterion set to NLL loss function
+        
+        
         self.criterion = nn.NLLLoss().to(self.device)
+        
+        ## store gpu id
         self.device_id = device_id
 
     def train_val_test(self, dataset, idxs):
@@ -39,10 +73,15 @@ class LocalUpdate(object):
         and user indexes.
         """
         # split indexes for train, validation, and test (80, 10, 10)
+        ## this splits the dataset in to train, validation and test in ratio of 80:10:10.
+        
         idxs_train = idxs[:int(0.8*len(idxs))]
         idxs_val = idxs[int(0.8*len(idxs)):int(0.9*len(idxs))]
         idxs_test = idxs[int(0.9*len(idxs)):]
 
+        
+        ## create dataloader using pytorch inbuilt function 'DataLoader'
+        
         trainloader = DataLoader(DatasetSplit(dataset, idxs_train),
                                  batch_size=self.args.local_bs, shuffle=True)
         validloader = DataLoader(DatasetSplit(dataset, idxs_val),
@@ -53,10 +92,16 @@ class LocalUpdate(object):
 
     def update_weights(self, model, global_round):
         # Set mode to train model
+        
+        ## pytorch provides two modes eval() and train().
+        ## train sets the mode to training and eval is used for inferernce.
+        
         model.train()
         epoch_loss = []
-
+        
         # Set optimizer for the local updates
+        
+        ### set optimizer
         if self.args.optimizer == 'sgd':
             optimizer = torch.optim.SGD(model.parameters(), lr=self.args.lr,
                                         momentum=0.5)
@@ -67,12 +112,23 @@ class LocalUpdate(object):
         for iter in range(self.args.local_ep):
             batch_loss = []
             for batch_idx, (images, labels) in enumerate(self.trainloader):
+                
+                ## push data to the gpu
                 images, labels = images.to(self.device), labels.to(self.device)
-
-                model.zero_grad()
+                
+                ## set the gradients to zero before each iteration
+                optimizer.zero_grad()
+                
+                ## obtain the model output
                 log_probs = model(images)
+                
+                ### get the loss for the bach
                 loss = self.criterion(log_probs, labels)
+                
+                ## do backpropagation
                 loss.backward()
+                
+                ### get the gradient updates
                 optimizer.step()
 
                 if self.args.verbose and (batch_idx % 10 == 0):
@@ -83,13 +139,14 @@ class LocalUpdate(object):
                         100. * batch_idx / len(self.trainloader), loss.item()))
                 batch_loss.append(loss.item())
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
-
+        
+        ## return the model state and loss
         return model.state_dict(), sum(epoch_loss) / len(epoch_loss)
 
     def inference(self, model):
         """ Returns the inference accuracy and loss.
         """
-
+        ### we will use the eval mode for inference
         model.eval()
         loss, total, correct = 0.0, 0.0, 0.0
 
