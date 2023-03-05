@@ -180,7 +180,7 @@ def test_inference(args, model, test_dataset):
     testloader = DataLoader(test_dataset, batch_size=128,
                             shuffle=False)
 
-    for batch_idx, (images, labels) in enumerate(testloader):
+    for _, (images, labels) in enumerate(testloader):
         images, labels = images.to(device), labels.to(device)
 
         # Inference

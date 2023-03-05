@@ -63,7 +63,7 @@ def get_dataset(args):
         else:
             # Sample Non-IID user data from Mnist
             if args.unequal:
-                # Chose uneuqal splits for every user
+                # Chose unequal splits for every user
                 user_groups = mnist_noniid_unequal(train_dataset, args.num_users)
             else:
                 # Chose equal splits for every user
@@ -74,7 +74,7 @@ def get_dataset(args):
 
 def average_weights(w):
     """
-    Returns the average of the weights.
+    Returns the average of the model weights.
     """
     w_avg = copy.deepcopy(w[0])
     for key in w_avg.keys():
